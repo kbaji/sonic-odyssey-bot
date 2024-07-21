@@ -54,6 +54,8 @@ const { displayHeader } = require('./src/displayUtils');
     throw new Error(colors.red('Invalid number of addresses specified'));
   }
 
+  let count = 1;
+  
   const randomAddresses = generateRandomAddresses(addressCount);
 
   let rentExemptionAmount;
@@ -100,15 +102,19 @@ const { displayHeader } = require('./src/displayUtils');
   } while (isNaN(amountToSend) || amountToSend < rentExemptionAmount);
 
   const defaultDelay = 1000;
-  const delayInput = readlineSync.question(
-    `Enter the delay between transactions in milliseconds (default is ${defaultDelay}ms): `
-  );
-  const delayBetweenTx = delayInput ? parseInt(delayInput, 10) : defaultDelay;
-
-  if (isNaN(delayBetweenTx) || delayBetweenTx < 0) {
-    throw new Error(colors.red('Invalid delay specified'));
+  const minDelay = 10000; // Minimum random delay 10 seconds
+  const maxDelay = 30000; // Maximum random delay 30 seconds
+  // Generate a random delay between minDelay and maxDelay
+  const delayBetweenTx = () => {
+    let x = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+    console.log(`Waiting ${x / 1000} seconds`);
+    return x;
+  };
+  
+  if (isNaN(delayBetweenTx()) || delayBetweenTx() < 0) {
+    console.log(colors.red('Invalid delay specified'));
   }
-
+  
   for (const [index, seedOrKey] of seedPhrasesOrKeys.entries()) {
     let fromKeypair;
     if (method === '0') {
@@ -131,10 +137,12 @@ const { displayHeader } = require('./src/displayUtils');
         console.log(
           colors.green(`Successfully sent ${amountToSend} SOL to ${address}`)
         );
+        console.log(colors.green(`Transaction ${count}/${addressCount} done`));
+        count++;
       } catch (error) {
         console.error(colors.red(`Failed to send SOL to ${address}:`), error);
       }
-      await delay(delayBetweenTx);
+      await delay(delayBetweenTx());
     }
   }
 })();
