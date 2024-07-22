@@ -77,43 +77,17 @@ const { displayHeader } = require('./src/displayUtils');
     rentExemptionAmount = 0.001;
   }
 
-  let amountToSend;
-  do {
-    const amountInput = readlineSync.question(
-      'Enter the amount of SOL to send (default is 0.001 SOL): '
-    );
-    amountToSend = amountInput ? parseFloat(amountInput) : 0.001;
-
-    if (isNaN(amountToSend) || amountToSend < rentExemptionAmount) {
-      console.log(
-        colors.red(
-          `Invalid amount specified. The amount must be at least ${rentExemptionAmount} SOL to avoid rent issues.`
-        )
-      );
-      console.log(
-        colors.yellow(
-          `Suggested amount to send: ${Math.max(
-            0.001,
-            rentExemptionAmount
-          )} SOL`
-        )
-      );
-    }
-  } while (isNaN(amountToSend) || amountToSend < rentExemptionAmount);
-
-  const defaultDelay = 1000;
-  const minDelay = 10000; // Minimum random delay 10 seconds
-  const maxDelay = 30000; // Maximum random delay 30 seconds
-  // Generate a random delay between minDelay and maxDelay
-  const delayBetweenTx = () => {
-    let x = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
-    console.log(`Waiting ${x / 1000} seconds`);
-    return x;
+  const minAmount = 0.001;
+  const maxAmount = 0.009;
+  const generateRandomAmount = () => {
+    return (Math.random() * (maxAmount - minAmount) + minAmount).toFixed(3);
   };
-  
-  if (isNaN(delayBetweenTx()) || delayBetweenTx() < 0) {
-    console.log(colors.red('Invalid delay specified'));
-  }
+
+  const minDelay = 60000; // Minimum random delay 1 minute
+  const maxDelay = 120000; // Maximum random delay 2 minutes
+  const generateRandomDelay = () => {
+    return Math.floor(Math.random() * (maxDelay - minDelay) + minDelay);
+  };
   
   for (const [index, seedOrKey] of seedPhrasesOrKeys.entries()) {
     let fromKeypair;
@@ -133,6 +107,7 @@ const { displayHeader } = require('./src/displayUtils');
     for (const address of randomAddresses) {
       const toPublicKey = new PublicKey(address);
       try {
+        const amountToSend = generateRandomAmount();
         await sendSol(fromKeypair, toPublicKey, amountToSend);
         console.log(
           colors.green(`Successfully sent ${amountToSend} SOL to ${address}`)
@@ -142,7 +117,9 @@ const { displayHeader } = require('./src/displayUtils');
       } catch (error) {
         console.error(colors.red(`Failed to send SOL to ${address}:`), error);
       }
-      await delay(delayBetweenTx());
+      const delayBetweenTx = generateRandomDelay();
+      console.log(`Waiting ${delayBetweenTx/1000} seconds`);
+      await delay(delayBetweenTx);
     }
   }
 })();
