@@ -93,3 +93,7 @@ Contributions are welcome! Feel free to open issues or pull requests for any imp
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Edit
+
+Random delay and random SOL send amount in ```index.js line 80 - 90``` (you can adjust as you want)
